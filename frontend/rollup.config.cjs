@@ -1,10 +1,12 @@
-import { spawn } from 'child_process';
-import svelte from 'rollup-plugin-svelte';
-import commonjs from '@rollup/plugin-commonjs';
-import terser from '@rollup/plugin-terser';
-import resolve from '@rollup/plugin-node-resolve';
-import livereload from 'rollup-plugin-livereload';
-import css from 'rollup-plugin-css-only';
+const { spawn } = require('child_process');
+const svelte = require('rollup-plugin-svelte');
+const commonjs = require('@rollup/plugin-commonjs');
+const terser = require('@rollup/plugin-terser');
+const resolve = require('@rollup/plugin-node-resolve');
+const livereload = require('rollup-plugin-livereload');
+const css = require('rollup-plugin-css-only');
+const sveltePreprocess = require('svelte-preprocess');
+const postcss = require('rollup-plugin-postcss');
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -29,7 +31,7 @@ function serve() {
 	};
 }
 
-export default {
+module.exports = {
 	input: 'src/main.js',
 	output: {
 		sourcemap: true,
@@ -39,14 +41,33 @@ export default {
 	},
 	plugins: [
 		svelte({
+			preprocess: sveltePreprocess({
+				sourceMap: !production,
+				postcss: true, // Change this line
+			}),
 			compilerOptions: {
 				// enable run-time checks when not in production
 				dev: !production
 			}
 		}),
-		// we'll extract any component CSS out into
-		// a separate file - better for performance
-		css({ output: 'bundle.css' }),
+		// Remove the existing css plugin
+		// css({ output: 'bundle.css' }),
+		postcss({
+			extract: 'bundle.css',
+			minimize: production,
+			use: [
+				['sass', {
+					includePaths: [
+						'./src/theme',
+						'./node_modules'
+					]
+				}]
+			],
+			plugins: [
+				require('tailwindcss'),
+				require('autoprefixer'),
+			]
+		}),
 
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
