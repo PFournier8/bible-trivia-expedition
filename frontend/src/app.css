@@ -27,14 +27,18 @@ header:hover {
   }
 
   .btn {
-    @apply font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 relative overflow-hidden no-underline;
+    @apply font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg relative overflow-hidden no-underline;
   }
 
   .btn-transparent {
     @apply bg-transparent text-white font-bold py-3 px-6 rounded-full transition-all duration-300 border-2 border-white;
   }
 
-  .btn-transparent:hover {
+  .play-game-btn {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .play-game-btn:hover {
     @apply transform scale-105 -translate-y-0.5 shadow-lg;
   }
 }
@@ -51,4 +55,43 @@ a:hover {
 
 a:visited {
   color: inherit;
+}
+
+/* New global classes for text colors */
+.text-on-dark {
+  @apply text-white;
+}
+
+.text-on-light {
+  @apply text-black;
+}
+
+/* Ensure buttons with colored backgrounds have white text */
+.btn-shine,
+.bg-[#5433ff] {
+  @apply text-white;
+}
+
+/* Footer styles */
+footer {
+  @apply font-sans;
+}
+
+footer h2 {
+  @apply font-serif;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.footer-icon {
+  @apply text-white opacity-80 hover:opacity-100 transition-opacity duration-300 text-lg;
+}
+
+footer a:hover {
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  footer .container > div {
+    @apply text-center;
+  }
 }
