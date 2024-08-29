@@ -4,8 +4,8 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class ExpeditionPack extends Model {
     static associate(models) {
-      ExpeditionPack.belongsTo(models.User, { foreignKey: 'creator_id', as: 'creator' });
-      ExpeditionPack.hasMany(models.Question, { foreignKey: 'pack_id' });
+      ExpeditionPack.belongsTo(models.User, { foreignKey: 'creatorId', as: 'creator' });
+      ExpeditionPack.hasMany(models.Question, { foreignKey: 'packId' });
     }
   }
   ExpeditionPack.init({
@@ -14,23 +14,21 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     description: DataTypes.TEXT,
-    creator_id: {
+    creatorId: {
       type: DataTypes.INTEGER,
       references: {
         model: 'Users',
         key: 'id'
       }
     },
-    is_official: {
+    isOfficial: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     }
   }, {
     sequelize,
     modelName: 'ExpeditionPack',
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    timestamps: true
   });
   return ExpeditionPack;
 };

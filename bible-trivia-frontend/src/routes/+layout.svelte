@@ -2,9 +2,15 @@
   import '../app.css';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
+  // @ts-ignore
   import { page } from '$app/stores';
+  // @ts-ignore
   import { browser } from '$app/environment';
 
+  // @ts-ignore
+  /**
+	 * @type {number}
+	 */
   let scrollY;
   let isLoggedIn = false;
 
@@ -35,8 +41,8 @@
 
 <div class="flex flex-col min-h-screen bg-white">
   <header 
-    class="fixed w-full z-10 transition-all duration-300 trippy-gradient"
-    style="background-color: {scrollY > 50 ? 'rgba(75, 85, 99, 0.8)' : 'transparent'}"
+    class="fixed w-full z-10 transition-all duration-300 {isLoggedIn ? 'trippy-gradient' : 'bg-gray-800'}"
+    style="background-color: {isLoggedIn && scrollY > 50 ? 'rgba(75, 85, 99, 0.8)' : 'transparent'}"
   >
     <div class="container mx-auto px-4 py-6 flex justify-between items-center">
       <h1 class="text-3xl font-bold text-white font-serif">

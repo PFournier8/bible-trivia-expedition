@@ -3,10 +3,17 @@
   import { fade, fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import axios from 'axios';
+  // @ts-ignore
   import { goto } from '$app/navigation';
 
+  /**
+	 * @type {any[]}
+	 */
   let expeditionPacks = [];
   let loading = true;
+  /**
+	 * @type {string | null}
+	 */
   let error = null;
 
   onMount(async () => {
@@ -23,6 +30,7 @@
       });
       expeditionPacks = response.data;
     } catch (err) {
+      // @ts-ignore
       if (err.response && err.response.status === 401) {
         localStorage.removeItem('token');
         goto('/login');
@@ -34,6 +42,9 @@
     }
   });
 
+  /**
+	 * @param {any} packId
+	 */
   function startExpedition(packId) {
     // Navigate to the trivia game for the selected pack
     goto(`/game/${packId}`);
