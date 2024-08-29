@@ -10,16 +10,16 @@
 
 <Router {url}>
 	<div class="flex flex-col min-h-screen bg-white">
-	  <header class="text-white fixed w-full z-10">
-		<div class="container mx-auto px-4 py-4 flex justify-between items-center">
-		  <h1 class="text-2xl font-bold text-white font-serif">
-			<Link to="/" class="hover:text-yellow-300 transition duration-300">Bible Trivia Expedition</Link>
+	  <header class="fixed w-full z-10">
+		<div class="container mx-auto px-4 py-6 flex justify-between items-center">
+		  <h1 class="text-3xl font-bold text-white font-serif">
+			<Link to="/" class="text-white hover:text-yellow-300 transition duration-300">Bible Trivia Expedition</Link>
 		  </h1>
-		  <nav class="space-x-6">
-			<Link class="text-white hover:text-yellow-300 transition duration-300" to="/">Home</Link>
-			<Link class="text-white hover:text-yellow-300 transition duration-300" to="/login">Login</Link>
-			<Link class="text-white hover:text-yellow-300 transition duration-300" to="/register">Register</Link>
-			<Link class="btn btn-secondary" to="/game">Play Game</Link>
+		  <nav class="space-x-8">
+			<Link class="nav-link" to="/">Home</Link>
+			<Link class="nav-link" to="/login">Login</Link>
+			<Link class="nav-link" to="/register">Register</Link>
+			<Link class="btn btn-transparent" to="/game">Play Game</Link>
 		  </nav>
 		</div>
 	  </header>
