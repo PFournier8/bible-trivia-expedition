@@ -1,34 +1,35 @@
+// models/question.js
 'use strict';
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Question extends Model {
     static associate(models) {
-      Question.belongsTo(models.ExpeditionPack, { foreignKey: 'pack_id' });
+      Question.belongsTo(models.ExpeditionPack, { foreignKey: 'packId' });
+      Question.hasMany(models.Answer, { foreignKey: 'questionId' });
     }
   }
   Question.init({
-    pack_id: {
+    packId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
         model: 'ExpeditionPacks',
         key: 'id'
       }
     },
-    question_text: {
+    questionText: {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    correct_answer: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    wrong_answers: {
-      type: DataTypes.ARRAY(DataTypes.TEXT),
-      allowNull: false
+    questionType: {
+      type: DataTypes.ENUM('truefalse', 'multiplechoice'),
+      allowNull: false,
+      defaultValue: 'multiplechoice'
     },
     difficulty: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       validate: {
         min: 1,
         max: 5
@@ -37,9 +38,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Question',
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    tableName: 'questions',
   });
   return Question;
 };
