@@ -14,14 +14,28 @@ const gameRoutes = require('./routes/game');
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS Configuration
+const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+
 const io = socketIo(server, {
-  cors: {
-    origin: "http://localhost:5000", 
-    methods: ["GET", "POST"]
-  }
+  cors: corsOptions
 });
 
-app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -39,6 +53,12 @@ io.on('connection', (socket) => {
     console.log('Client disconnected');
   });
   // Add more socket event handlers here as needed
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 
 const PORT = process.env.PORT || 3000;

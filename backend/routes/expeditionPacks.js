@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { ExpeditionPack, User } = require('../models');
-const authenticateToken = require('../middleware/authenticateToken');
+const authenticateToken = require('../middleware/auth');
+
 
 // Get all expedition packs
 router.get('/', async (req, res) => {

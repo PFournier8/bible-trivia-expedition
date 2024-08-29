@@ -1,7 +1,7 @@
 <script>
+  import axios from '$lib/axios';
   // @ts-ignore
   import { goto } from '$app/navigation';
-  import axios from "axios";
   import { fade, fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
 
@@ -14,7 +14,7 @@
     loading = true;
     error = "";
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, {
+      const response = await axios.post('/users/login', {
         email,
         password,
       });
