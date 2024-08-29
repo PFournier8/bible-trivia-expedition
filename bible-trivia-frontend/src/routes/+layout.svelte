@@ -30,15 +30,15 @@
         <div class="text-center md:text-right">
           <p class="text-sm opacity-80">Made by Preston Fournier</p>
           <div class="mt-2 flex justify-center md:justify-end space-x-4">
-            <a href="javascript:void(0)" class="footer-icon" aria-label="Facebook">
+            <button class="footer-icon" aria-label="Facebook">
               <i class="fab fa-facebook-f"></i>
-            </a>
-            <a href="javascript:void(0)" class="footer-icon" aria-label="Twitter">
+            </button>
+            <button class="footer-icon" aria-label="Twitter">
               <i class="fab fa-twitter"></i>
-            </a>
-            <a href="javascript:void(0)" class="footer-icon" aria-label="Instagram">
+            </button>
+            <button class="footer-icon" aria-label="Instagram">
               <i class="fab fa-instagram"></i>
-            </a>
+            </button>
           </div>
         </div>
       </div>
