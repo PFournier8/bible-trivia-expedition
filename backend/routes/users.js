@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { User } = require('../models');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -63,6 +65,33 @@ router.delete('/:id', async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Register a new user
+router.post('/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({ username, email, password_hash });
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(201).json({ token, user: { id: user.id, username: user.username, email: user.email } });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
