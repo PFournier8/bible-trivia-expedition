@@ -5,5 +5,42 @@
 @tailwind utilities;
 
 body {
-  @apply bg-background text-text;
+  @apply bg-white text-black font-sans;
+}
+
+header {
+  @apply text-white fixed w-full z-10;
+  transition: background-color 0.3s ease;
+}
+
+header:hover {
+  background-color: rgba(75, 85, 99, 0.2);
+}
+
+nav a {
+  @apply text-white hover:text-yellow-300 transition duration-300;
+}
+
+@layer components {
+  .btn {
+    @apply font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 relative overflow-hidden no-underline;
+  }
+
+  .btn::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-full opacity-0 transition-opacity duration-300;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
+  }
+
+  .btn:hover::before {
+    @apply opacity-100;
+  }
+
+  .btn-primary {
+    @apply bg-[#5433ff] text-white hover:bg-[#4928e6];
+  }
+
+  .btn-secondary {
+    @apply bg-black text-white hover:bg-gray-800;
+  }
 }
