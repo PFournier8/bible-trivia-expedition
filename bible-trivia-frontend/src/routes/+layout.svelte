@@ -35,6 +35,8 @@
   $: if (browser && $page) {
     checkLoginStatus();
   }
+
+  $: showFooter = !$page.url.pathname.includes('/login') && !$page.url.pathname.includes('/register');
 </script>
 
 <svelte:window bind:scrollY />
@@ -70,29 +72,31 @@
     <slot />
   </main>
 
-  <footer class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-6">
-    <div class="container mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="mb-4 md:mb-0">
-          <h2 class="text-2xl font-serif font-bold">Bible Trivia Expedition</h2>
-        </div>
-        <div class="text-center md:text-right">
-          <p class="text-sm opacity-80">Made by Preston Fournier</p>
-          <div class="mt-2 flex justify-center md:justify-end space-x-4">
-            <button class="footer-icon" aria-label="Facebook">
-              <i class="fab fa-facebook-f"></i>
-            </button>
-            <button class="footer-icon" aria-label="Twitter">
-              <i class="fab fa-twitter"></i>
-            </button>
-            <button class="footer-icon" aria-label="Instagram">
-              <i class="fab fa-instagram"></i>
-            </button>
+  {#if showFooter}
+    <footer class="trippy-gradient text-white py-6">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="mb-4 md:mb-0">
+            <h2 class="text-2xl font-serif font-bold">Bible Trivia Expedition</h2>
+          </div>
+          <div class="text-center md:text-right">
+            <p class="text-sm opacity-80">Made by Preston Fournier</p>
+            <div class="mt-2 flex justify-center md:justify-end space-x-4">
+              <button class="footer-icon" aria-label="Facebook">
+                <i class="fab fa-facebook-f"></i>
+              </button>
+              <button class="footer-icon" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+              </button>
+              <button class="footer-icon" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
+  {/if}
 </div>
 
 <style>
