@@ -2,8 +2,17 @@
     import { onMount } from "svelte";
     import axios from "axios";
   
+    /**
+	 * @type {any[]}
+	 */
     let packs = [];
+    /**
+	 * @type {null}
+	 */
     let selectedPack = null;
+    /**
+	 * @type {{ question_text: any; } | null}
+	 */
     let currentQuestion = null;
     let error = "";
   

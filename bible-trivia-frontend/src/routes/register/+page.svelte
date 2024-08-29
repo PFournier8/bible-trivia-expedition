@@ -1,5 +1,6 @@
 <script>
-    import { navigate } from "svelte-routing";
+    // @ts-ignore
+    import { goto } from '$app/navigation';
     import axios from "axios";
   
     let username = "";
@@ -15,16 +16,17 @@
           password,
         });
         localStorage.setItem("token", response.data.token);
-        navigate("/game");
+        goto('/game');
       } catch (err) {
+        // @ts-ignore
         error = err.response.data.message || "An error occurred";
       }
     }
-  </script>
+</script>
+
+<h1>Register</h1>
   
-  <h1>Register</h1>
-  
-  <form on:submit|preventDefault={handleSubmit}>
+<form on:submit|preventDefault={handleSubmit}>
     <div>
       <label for="username">Username:</label>
       <input type="text" id="username" bind:value={username} required />

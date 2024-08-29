@@ -1,5 +1,6 @@
 <script>
-    import { navigate } from "svelte-routing";
+    // @ts-ignore
+    import { goto } from '$app/navigation';
     import axios from "axios";
   
     let email = "";
@@ -13,16 +14,17 @@
           password,
         });
         localStorage.setItem("token", response.data.token);
-        navigate("/game");
+        goto('/game');
       } catch (err) {
+        // @ts-ignore
         error = err.response.data.message || "An error occurred";
       }
     }
-  </script>
-  
-  <h1>Login</h1>
-  
-  <form on:submit|preventDefault={handleSubmit}>
+</script>
+
+<h1>Login</h1>
+
+<form on:submit|preventDefault={handleSubmit}>
     <div>
       <label for="email">Email:</label>
       <input type="email" id="email" bind:value={email} required />
@@ -32,13 +34,13 @@
       <input type="password" id="password" bind:value={password} required />
     </div>
     <button type="submit">Login</button>
-  </form>
-  
-  {#if error}
+</form>
+
+{#if error}
     <p class="error">{error}</p>
-  {/if}
-  
-  <style>
+{/if}
+
+<style>
     form {
       display: flex;
       flex-direction: column;
@@ -48,4 +50,4 @@
     .error {
       color: red;
     }
-  </style>
+</style>
