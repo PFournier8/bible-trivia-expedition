@@ -1,69 +1,81 @@
 <script>
-    import { onMount } from "svelte";
-    import axios from "axios";
-  
-    /**
-	 * @type {any[]}
-	 */
-    let packs = [];
-    /**
-	 * @type {null}
-	 */
-    let selectedPack = null;
-    /**
-	 * @type {{ question_text: any; } | null}
-	 */
-    let currentQuestion = null;
-    let error = "";
-  
-    onMount(async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/expedition-packs`, {
-          headers: { "x-auth-token": localStorage.getItem("token") }
-        });
-        packs = response.data;
-      } catch (err) {
-        error = "Failed to load expedition packs";
-      }
-    });
-  
-    async function startGame() {
-      if (!selectedPack) return;
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/game/start`,
-          { packId: selectedPack },
-          { headers: { "x-auth-token": localStorage.getItem("token") } }
-        );
-        currentQuestion = response.data.question;
-      } catch (err) {
-        error = "Failed to start game";
-      }
+  import { onMount } from 'svelte';
+  import { fade, fly } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
+  import axios from 'axios';
+  import { goto } from '$app/navigation';
+
+  let expeditionPacks = [];
+  let loading = true;
+  let error = null;
+
+  onMount(async () => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      goto('/login'); // Redirect to login if not logged in
+      return;
     }
-  </script>
-  
-  <h1>Bible Trivia Game</h1>
-  
-  {#if error}
-    <p class="error">{error}</p>
-  {/if}
-  
-  {#if !currentQuestion}
-    <h2>Select an Expedition Pack</h2>
-    <select bind:value={selectedPack}>
-      <option value={null}>Choose a pack...</option>
-      {#each packs as pack}
-        <option value={pack.id}>{pack.name}</option>
-      {/each}
-    </select>
-    <button on:click={startGame} disabled={!selectedPack}>Start Game</button>
-  {:else}
-    <h2>{currentQuestion.question_text}</h2>
-    <!-- Add logic for displaying and answering questions here -->
-  {/if}
-  
-  <style>
-    .error {
-      color: red;
+
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/expedition-packs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      expeditionPacks = response.data;
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        goto('/login');
+      } else {
+        error = "Failed to load expedition packs. Please try again later.";
+      }
+    } finally {
+      loading = false;
     }
-  </style>
+  });
+
+  function startExpedition(packId) {
+    // Navigate to the trivia game for the selected pack
+    goto(`/game/${packId}`);
+  }
+</script>
+
+<svelte:head>
+  <title>Home - Bible Trivia Expedition</title>
+</svelte:head>
+
+<div class="min-h-screen pt-24">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8 text-center text-white">Choose Your Expedition</h1>
+
+    {#if loading}
+      <div class="text-center text-white">Loading expedition packs...</div>
+    {:else if error}
+      <div class="text-center text-red-300">{error}</div>
+    {:else}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {#each expeditionPacks as pack (pack.id)}
+          <div 
+            class="bg-white bg-opacity-20 rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl backdrop-filter backdrop-blur-lg"
+            in:fly={{ y: 50, duration: 300, delay: 300, easing: cubicOut }}
+          >
+            <div class="p-6">
+              <h2 class="text-2xl font-bold mb-2 text-white">{pack.name}</h2>
+              <p class="text-gray-200 mb-4">{pack.description}</p>
+              <button 
+                on:click={() => startExpedition(pack.id)}
+                class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-full hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 transform hover:-translate-y-1"
+              >
+                Start Expedition
+              </button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </main>
+</div>
+
+<style>
+  /* Additional styles can be added here if needed */
+</style>

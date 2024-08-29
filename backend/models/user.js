@@ -18,16 +18,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
-    password_hash: {
+    passwordHash: {
       type: DataTypes.STRING(255),
       allowNull: false
     }
   }, {
     sequelize,
     modelName: 'User',
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   });
   return User;
 };

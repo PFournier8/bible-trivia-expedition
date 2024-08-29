@@ -71,6 +71,7 @@ router.delete('/:id', async (req, res) => {
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
+    console.log('Registration attempt:', req.body);
     const { username, email, password } = req.body;
 
     // Check if user already exists
@@ -81,17 +82,46 @@ router.post('/register', async (req, res) => {
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await User.create({ username, email, password_hash });
+    const user = await User.create({ username, email, passwordHash });
+    console.log('User created:', user.toJSON());
 
     // Generate JWT token
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     res.status(201).json({ token, user: { id: user.id, username: user.username, email: user.email } });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Registration error:', error);
+    res.status(400).json({ message: error.message, details: error.toString() });
+  }
+});
+
+// Login user
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error', details: error.toString() });
   }
 });
 
