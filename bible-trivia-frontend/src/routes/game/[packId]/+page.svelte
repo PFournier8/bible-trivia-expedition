@@ -18,16 +18,25 @@
   let questions = [];
   let currentQuestionIndex = 0;
   // @ts-ignore
+  /**
+	 * @type {null}
+	 */
   let selectedAnswer = null;
   let score = 0;
   let loading = true;
   // @ts-ignore
+  /**
+	 * @type {string | null}
+	 */
   let error = null;
   let completedPack = false;
   // @ts-ignore
   let startTime;
   let endTime;
   // @ts-ignore
+  /**
+	 * @type {any[]}
+	 */
   let leaderboard = [];
 
  // @ts-ignore
@@ -44,6 +53,19 @@
 
   // @ts-ignore
   let gameContainer;
+
+  /**
+	 * @param {number} seconds
+	 */
+  function formatTime(seconds) {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  }
 
   onMount(() => {
     // @ts-ignore
@@ -65,7 +87,7 @@
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        questions = response.data.map(q => {
+        questions = response.data.map((/** @type {{ answers: any[]; }} */ q) => {
           const answers = q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }));
           return {
             ...q,
@@ -277,7 +299,7 @@
                     </div>
                     <div class="flex-grow">
                       <p class="font-semibold text-white">{entry.User.username}</p>
-                      <p class="text-sm text-blue-200">{entry.timeCompleted}s</p>
+                      <p class="text-sm text-blue-200">{formatTime(entry.timeCompleted)}</p>
                     </div>
                   </div>
                 {/each}
