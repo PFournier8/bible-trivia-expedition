@@ -73,14 +73,6 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        name: 'Paul’s Missionary Journeys',
-        description: 'Follow the Apostle Paul on his missionary journeys.',
-        creatorId: adminUserId,
-        isOfficial: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
         name: 'The Ten Commandments',
         description: 'A deep dive into the Ten Commandments and their significance.',
         creatorId: adminUserId,

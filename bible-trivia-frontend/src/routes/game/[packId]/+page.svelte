@@ -10,6 +10,7 @@
   import { page } from '$app/stores';
   // @ts-ignore
   import { goto } from '$app/navigation';
+  import { shuffle } from './utils'; // Add this import
 
   // @ts-ignore
   let packId;
@@ -28,7 +29,6 @@
   let endTime;
   // @ts-ignore
   let leaderboard = [];
-  let showLeaderboard = false;
 
  // @ts-ignore
    $: currentQuestion = questions[currentQuestionIndex];
@@ -65,12 +65,13 @@
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        // @ts-ignore
-        questions = response.data.map(q => ({
-          ...q,
-          // @ts-ignore
-          Answers: q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }))
-        }));
+        questions = response.data.map(q => {
+          const answers = q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }));
+          return {
+            ...q,
+            Answers: answers.length > 2 ? shuffle([...answers]) : answers
+          };
+        });
         loading = false;
         startTime = Date.now();
       } catch (err) {
@@ -172,11 +173,6 @@
     answerSubmitted = false;
     feedbackMessage = '';
     startTime = Date.now();
-    showLeaderboard = false;
-  }
-
-  function toggleLeaderboard() {
-    showLeaderboard = !showLeaderboard;
   }
 
   function selectAnotherPack() {
@@ -261,75 +257,76 @@
       {:else if questions.length === 0}
         <div class="text-center text-white text-xl bg-red-600 bg-opacity-80 p-8 rounded-lg shadow-xl">No questions found for this pack.</div>
       {:else if completedPack}
-        <div class="text-center bg-white bg-opacity-95 rounded-2xl p-10 shadow-2xl" in:fade={{ duration: 800 }}>
-          <div class="mb-8">
-            <h2 class="text-5xl font-bold mb-4 text-indigo-800 font-poppins">Congratulations!</h2>
-            <p class="text-2xl mb-4 text-indigo-600 font-poppins">You've completed the trivia pack!</p>
-          </div>
-          <div class="mb-8">
-            <p class="text-3xl font-semibold mb-4 text-indigo-800 font-poppins">
-              Your Accuracy: <span class="text-4xl text-indigo-600">{score}</span> / {questions.length}
-            </p>
-            <div class="flex items-center justify-center">
-              <div class="w-48 h-48 relative">
-                <svg class="w-full h-full" viewBox="0 0 100 100">
-                  <circle class="text-gray-200 stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"/>
-                  <circle class="text-indigo-600 progress-ring stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"
-                          stroke-dasharray="251.2"
-                          stroke-dashoffset={251.2 - (251.2 * accuracy / 100)}
-                  />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <span class="text-4xl font-bold text-indigo-800 font-poppins">{accuracy}%</span>
-                </div>
+        <div class="flex justify-center items-start space-x-8">
+          <!-- Leaderboard -->
+          <div class="w-1/3" in:fade={{ duration: 800 }}>
+            <div class="bg-gradient-to-b from-blue-900 to-blue-700 rounded-2xl p-6 shadow-2xl h-[600px] flex flex-col">
+              <h3 class="text-3xl font-bold mb-4 text-white font-poppins text-center">Leaderboard</h3>
+              <div class="flex-grow overflow-y-auto custom-scrollbar">
+                {#each leaderboard.slice(0, 10) as entry, index}
+                  <div class="flex items-center mb-4 p-3 rounded-lg transition-all duration-300 hover:bg-blue-600" 
+                       in:fly={{ y: 20, delay: 50 * index, duration: 300, easing: elasticOut }}>
+                    <div class="w-10 h-10 flex-shrink-0 mr-4 relative">
+                      {#if index < 3}
+                        <img src="/images/medal-{index + 1}.svg" alt="Medal {index + 1}" class="w-full h-full object-contain" />
+                      {:else}
+                        <div class="w-full h-full rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                          {index + 1}
+                        </div>
+                      {/if}
+                    </div>
+                    <div class="flex-grow">
+                      <p class="font-semibold text-white">{entry.User.username}</p>
+                      <p class="text-sm text-blue-200">{entry.timeCompleted}s</p>
+                    </div>
+                  </div>
+                {/each}
               </div>
             </div>
           </div>
-          <div class="flex justify-center space-x-4 mb-8">
-            <button 
-              on:click={restartPack}
-              class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 font-poppins"
-            >
-              Restart This Pack
-            </button>
-            <button 
-              on:click={selectAnotherPack}
-              class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-pink-600 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform hover:scale-105 font-poppins"
-            >
-              Select Another Pack
-            </button>
-          </div>
-          <button
-            on:click={toggleLeaderboard}
-            class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-yellow-500 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transform hover:scale-105 font-poppins"
-          >
-            {showLeaderboard ? 'Hide Leaderboard' : 'Show Leaderboard'}
-          </button>
-          {#if showLeaderboard}
-            <div class="mt-8 bg-white bg-opacity-90 rounded-lg p-6 shadow-lg" in:fade>
-              <h3 class="text-2xl font-bold mb-4 text-indigo-800">Leaderboard</h3>
-              <table class="w-full">
-                <thead>
-                  <tr>
-                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Rank</th>
-                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">User</th>
-                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Score</th>
-                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Time (s)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each leaderboard as entry, index}
-                    <tr class="border-b border-gray-200">
-                      <td class="py-2 px-4">{index + 1}</td>
-                      <td class="py-2 px-4">{entry.User.username}</td>
-                      <td class="py-2 px-4">{entry.highestScore}%</td>
-                      <td class="py-2 px-4">{entry.timeCompleted}</td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
+
+          <!-- Completed Pack Info -->
+          <div class="w-2/3 flex items-center justify-center">
+            <div class="text-center bg-white bg-opacity-95 rounded-2xl p-10 shadow-2xl max-w-2xl" in:fade={{ duration: 800 }}>
+              <div class="mb-8">
+                <h2 class="text-5xl font-bold mb-4 text-indigo-800 font-poppins">Congratulations!</h2>
+                <p class="text-2xl mb-4 text-indigo-600 font-poppins">You've completed the trivia pack!</p>
+              </div>
+              <div class="mb-8">
+                <p class="text-3xl font-semibold mb-4 text-indigo-800 font-poppins">
+                  Your Accuracy: <span class="text-4xl text-indigo-600">{score}</span> / {questions.length}
+                </p>
+                <div class="flex items-center justify-center">
+                  <div class="w-48 h-48 relative">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                      <circle class="text-gray-200 stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"/>
+                      <circle class="text-indigo-600 progress-ring stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"
+                              stroke-dasharray="251.2"
+                              stroke-dashoffset={251.2 - (251.2 * accuracy / 100)}
+                      />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <span class="text-4xl font-bold text-indigo-800 font-poppins">{accuracy}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-center space-x-4 mb-8">
+                <button 
+                  on:click={restartPack}
+                  class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 font-poppins"
+                >
+                  Restart This Pack
+                </button>
+                <button 
+                  on:click={selectAnotherPack}
+                  class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-pink-600 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform hover:scale-105 font-poppins"
+                >
+                  Select Another Pack
+                </button>
+              </div>
             </div>
-          {/if}
+          </div>
         </div>
       {:else if currentQuestion}
         <div class="bg-white bg-opacity-90 rounded-lg p-8 shadow-xl" in:fade>
@@ -423,5 +420,25 @@
 
   .font-poppins {
     font-family: 'Poppins', sans-serif;
+  }
+
+  /* Custom scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    border: transparent;
   }
 </style>
