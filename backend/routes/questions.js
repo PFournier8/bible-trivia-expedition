@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Question, Answer, ExpeditionPack, User } = require('../models');
 const authenticateToken = require('../middleware/auth');
+const { sequelize } = require('../models');
 
 // Get all questions with their answers
 router.get('/', async (req, res) => {
@@ -129,11 +130,30 @@ router.get('/by-pack/:packId', authenticateToken, async (req, res) => {
   try {
     const questions = await Question.findAll({
       where: { packId: req.params.packId },
-      include: [{ model: Answer }],
       order: sequelize.random(),
       limit: 10 // Adjust this number as needed
     });
-    res.json(questions);
+
+    // Format the questions based on their type
+    const formattedQuestions = questions.map(q => {
+      const formattedQ = q.toJSON();
+      if (formattedQ.questionType === 'truefalse') {
+        formattedQ.answers = [
+          { text: 'True', isCorrect: formattedQ.correctAnswer.toLowerCase() === 'true' },
+          { text: 'False', isCorrect: formattedQ.correctAnswer.toLowerCase() === 'false' }
+        ];
+      } else {
+        formattedQ.answers = [
+          { text: formattedQ.correctAnswer, isCorrect: true },
+          ...formattedQ.wrongAnswers.map(answer => ({ text: answer, isCorrect: false }))
+        ];
+      }
+      delete formattedQ.correctAnswer;
+      delete formattedQ.wrongAnswers;
+      return formattedQ;
+    });
+
+    res.json(formattedQuestions);
   } catch (error) {
     res.status(500).json({ message: 'Failed to load questions', error: error.message });
   }

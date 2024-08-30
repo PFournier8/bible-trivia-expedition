@@ -31,10 +31,12 @@
         });
         questions = response.data.map(q => ({
           ...q,
-          correctAnswer: q.Answers.find(a => a.isCorrect).answerText
+          Answers: q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }))
         }));
+        console.log('Processed questions:', questions);
         loading = false;
       } catch (err) {
+        console.error('Error fetching questions:', err);
         error = "Failed to load questions. Please try again later.";
         loading = false;
       }
@@ -76,6 +78,8 @@
         </div>
       {:else if error}
         <div class="text-center text-red-600 text-xl">{error}</div>
+      {:else if questions.length === 0}
+        <div class="text-center text-red-600 text-xl">No questions found for this pack.</div>
       {:else if gameOver}
         <div class="text-center" in:fade>
           <h2 class="text-4xl font-bold mb-4 text-indigo-800">Game Over!</h2>
@@ -87,7 +91,7 @@
             Play Again
           </button>
         </div>
-      {:else}
+      {:else if currentQuestion}
         <div class="bg-white rounded-lg p-8 shadow-xl border border-gray-200" in:fade>
           <div class="mb-8">
             <h2 class="text-2xl font-bold mb-2 text-indigo-800">Question {currentQuestionIndex + 1} of {questions.length}</h2>
@@ -118,6 +122,8 @@
             </button>
           </div>
         </div>
+      {:else}
+        <div class="text-center text-red-600 text-xl">No current question available.</div>
       {/if}
     </div>
   </div>
