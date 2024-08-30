@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       ExpeditionPack.belongsTo(models.User, { foreignKey: 'creatorId', as: 'creator' });
       ExpeditionPack.hasMany(models.Question, { foreignKey: 'packId' });
+      ExpeditionPack.hasMany(models.PackAttempt, { foreignKey: 'packId' });
     }
   }
   ExpeditionPack.init({
