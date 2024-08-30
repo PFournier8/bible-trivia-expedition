@@ -1,9 +1,11 @@
 <script>
-  import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
-  import { elasticOut } from 'svelte/easing';
+  import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
+  import { fade, fly, scale } from 'svelte/transition';
+  import { elasticOut, cubicInOut } from 'svelte/easing';
   import axios from 'axios';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   let packId;
   let questions = [];
@@ -12,36 +14,57 @@
   let score = 0;
   let loading = true;
   let error = null;
-  let gameOver = false;
+  let completedPack = false;
 
   $: currentQuestion = questions[currentQuestionIndex];
+  $: accuracy = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
 
   let answerSubmitted = false;
   let feedbackMessage = '';
+  let scoreAnimation = false;
+  let canvasElement;
+  let ctx;
 
-  onMount(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      goto('/login');
-      return;
+  let gameContainer;
+
+  onMount(() => {
+    if (browser && gameContainer) {
+      gameContainer.style.height = '100vh';
+      gameContainer.style.overflow = 'hidden';
     }
+    
+    const fetchQuestions = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        goto('/login');
+        return;
+      }
 
-    packId = $page.params.packId;
+      packId = $page.params.packId;
 
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      questions = response.data.map(q => ({
-        ...q,
-        Answers: q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }))
-      }));
-      console.log('Processed questions:', questions);
-      loading = false;
-    } catch (err) {
-      console.error('Error fetching questions:', err);
-      error = "Failed to load questions. Please try again later.";
-      loading = false;
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        questions = response.data.map(q => ({
+          ...q,
+          Answers: q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }))
+        }));
+        loading = false;
+      } catch (err) {
+        console.error('Error fetching questions:', err);
+        error = "Failed to load questions. Please try again later.";
+        loading = false;
+      }
+    };
+
+    fetchQuestions();
+    initSmoke();
+  });
+
+  onDestroy(() => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
     }
   });
 
@@ -57,6 +80,8 @@
       const correctAnswer = currentQuestion.Answers.find(a => a.isCorrect);
       if (selectedAnswer === correctAnswer.answerText) {
         score++;
+        scoreAnimation = true;
+        setTimeout(() => scoreAnimation = false, 1000);
         feedbackMessage = 'Correct!';
       } else {
         feedbackMessage = `Incorrect. The correct answer was: ${correctAnswer.answerText}`;
@@ -71,87 +96,216 @@
       answerSubmitted = false;
       feedbackMessage = '';
     } else {
-      gameOver = true;
+      completedPack = true;
     }
   }
 
-  function restartGame() {
+  function restartPack() {
     currentQuestionIndex = 0;
     selectedAnswer = null;
     score = 0;
-    gameOver = false;
+    completedPack = false;
     answerSubmitted = false;
     feedbackMessage = '';
+  }
+
+  function selectAnotherPack() {
+    goto('/game');
+  }
+
+  let particles = [];
+  let animationFrameId;
+
+  function initSmoke() {
+    canvasElement = document.getElementById('smokeCanvas');
+    ctx = canvasElement.getContext('2d');
+    canvasElement.width = window.innerWidth;
+    canvasElement.height = window.innerHeight;
+
+    for (let i = 0; i < 100; i++) {
+      particles.push({
+        x: Math.random() * canvasElement.width,
+        y: Math.random() * canvasElement.height,
+        radius: Math.random() * 20 + 5,
+        color: `rgba(255, 255, 255, ${Math.random() * 0.3})`,
+        vx: Math.random() * 2 - 1,
+        vy: Math.random() * 2 - 1
+      });
+    }
+
+    animateSmoke();
+  }
+
+  function animateSmoke() {
+    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+    particles.forEach(particle => {
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      ctx.fillStyle = particle.color;
+      ctx.fill();
+
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+
+      if (particle.x < 0 || particle.x > canvasElement.width) particle.vx *= -1;
+      if (particle.y < 0 || particle.y > canvasElement.height) particle.vy *= -1;
+    });
+
+    animationFrameId = requestAnimationFrame(animateSmoke);
   }
 </script>
 
 <svelte:head>
   <title>Bible Trivia Expedition - Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-3xl w-full space-y-8">
-    {#if loading}
-      <div class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
-      </div>
-    {:else if error}
-      <div class="text-center text-red-600 text-xl bg-white p-8 rounded-lg shadow-xl">{error}</div>
-    {:else if questions.length === 0}
-      <div class="text-center text-red-600 text-xl bg-white p-8 rounded-lg shadow-xl">No questions found for this pack.</div>
-    {:else if gameOver}
-      <div class="text-center bg-white rounded-lg p-8 shadow-xl" in:fade>
-        <h2 class="text-4xl font-bold mb-4 text-indigo-800">Game Over!</h2>
-        <p class="text-2xl mb-8">Your score: {score} out of {questions.length}</p>
-        <button 
-          on:click={restartGame}
-          class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Play Again
-        </button>
-      </div>
-    {:else if currentQuestion}
-      <div class="bg-white rounded-lg p-8 shadow-xl" in:fade>
-        <div class="mb-6">
-          <h2 class="text-2xl font-semibold mb-2 text-indigo-800">Question {currentQuestionIndex + 1} of {questions.length}</h2>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: {((currentQuestionIndex + 1) / questions.length) * 100}%"></div>
-          </div>
+<div bind:this={gameContainer} class="game-container">
+  <div class="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-gradient-x"></div>
+  <canvas id="smokeCanvas" class="fixed top-0 left-0 w-full h-full opacity-50"></canvas>
+
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div class="max-w-3xl w-full space-y-8">
+      {#if loading}
+        <div class="flex justify-center items-center h-64">
+          <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
         </div>
-        <h3 class="text-xl mb-6">{currentQuestion.questionText}</h3>
-        <div class="space-y-4 mb-8">
-          {#each currentQuestion.Answers as answer, index}
+      {:else if error}
+        <div class="text-center text-white text-xl bg-red-600 bg-opacity-80 p-8 rounded-lg shadow-xl">{error}</div>
+      {:else if questions.length === 0}
+        <div class="text-center text-white text-xl bg-red-600 bg-opacity-80 p-8 rounded-lg shadow-xl">No questions found for this pack.</div>
+      {:else if completedPack}
+        <div class="text-center bg-white bg-opacity-95 rounded-2xl p-10 shadow-2xl" in:fade={{ duration: 800 }}>
+          <div class="mb-8">
+            <h2 class="text-5xl font-bold mb-4 text-indigo-800 font-poppins">Congratulations!</h2>
+            <p class="text-2xl mb-4 text-indigo-600 font-poppins">You've completed the trivia pack!</p>
+          </div>
+          <div class="mb-8">
+            <p class="text-3xl font-semibold mb-4 text-indigo-800 font-poppins">
+              Your Accuracy: <span class="text-4xl text-indigo-600">{score}</span> / {questions.length}
+            </p>
+            <div class="flex items-center justify-center">
+              <div class="w-48 h-48 relative">
+                <svg class="w-full h-full" viewBox="0 0 100 100">
+                  <circle class="text-gray-200 stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"/>
+                  <circle class="text-indigo-600 progress-ring stroke-current" stroke-width="10" cx="50" cy="50" r="40" fill="transparent"
+                          stroke-dasharray="251.2"
+                          stroke-dashoffset={251.2 - (251.2 * accuracy / 100)}
+                  />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-4xl font-bold text-indigo-800 font-poppins">{accuracy}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center space-x-4">
             <button 
-              on:click={() => selectAnswer(answer.answerText)}
-              class="w-full p-4 rounded-lg text-left transition-all duration-200 
-                     {selectedAnswer === answer.answerText ? 'bg-indigo-100 border-2 border-indigo-500' : 'bg-gray-100 border border-gray-300'} 
-                     {answerSubmitted ? (answer.isCorrect ? 'bg-green-100 border-green-500' : (selectedAnswer === answer.answerText ? 'bg-red-100 border-red-500' : '')) : ''}
-                     hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              disabled={answerSubmitted}
-              in:fly={{ y: 20, delay: 50 * index, duration: 300, easing: elasticOut }}
+              on:click={restartPack}
+              class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 font-poppins"
             >
-              {answer.answerText}
+              Restart This Pack
             </button>
-          {/each}
-        </div>
-        {#if feedbackMessage}
-          <div class="text-center mb-6 text-lg font-semibold {feedbackMessage.includes('Correct') ? 'text-green-600' : 'text-red-600'}" in:fade>
-            {feedbackMessage}
+            <button 
+              on:click={selectAnotherPack}
+              class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-pink-600 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform hover:scale-105 font-poppins"
+            >
+              Select Another Pack
+            </button>
           </div>
-        {/if}
-        <div class="flex justify-between items-center">
-          <div class="text-xl font-bold text-indigo-800">Score: {score}</div>
-          <button 
-            on:click={answerSubmitted ? nextQuestion : submitAnswer}
-            disabled={!selectedAnswer && !answerSubmitted}
-            class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {answerSubmitted ? 'Next Question' : 'Submit Answer'}
-          </button>
         </div>
-      </div>
-    {:else}
-      <div class="text-center text-red-600 text-xl bg-white p-8 rounded-lg shadow-xl">No current question available.</div>
-    {/if}
+      {:else if currentQuestion}
+        <div class="bg-white bg-opacity-90 rounded-lg p-8 shadow-xl" in:fade>
+          <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2 text-indigo-800">Question {currentQuestionIndex + 1} of {questions.length}</h2>
+            <div class="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-500 ease-out"
+                style="width: {((currentQuestionIndex + 1) / questions.length) * 100}%"
+              >
+                <div class="w-full h-full opacity-30 animate-pulse bg-white"></div>
+              </div>
+            </div>
+          </div>
+          <h3 class="text-xl mb-6 font-medium text-gray-800">{currentQuestion.questionText}</h3>
+          <div class="space-y-4 mb-8">
+            {#each currentQuestion.Answers as answer, index}
+              <button 
+                on:click={() => selectAnswer(answer.answerText)}
+                class="w-full p-4 rounded-lg text-left transition-all duration-200 
+                       {selectedAnswer === answer.answerText ? 'bg-indigo-100 border-2 border-indigo-500' : 'bg-gray-100 border border-gray-300'} 
+                       {answerSubmitted ? (answer.isCorrect ? 'bg-green-100 border-green-500' : (selectedAnswer === answer.answerText ? 'bg-red-100 border-red-500' : '')) : ''}
+                       hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                disabled={answerSubmitted}
+                in:fly={{ y: 20, delay: 50 * index, duration: 300, easing: elasticOut }}
+              >
+                {answer.answerText}
+              </button>
+            {/each}
+          </div>
+          {#if feedbackMessage}
+            <div class="text-center mb-6 text-lg font-semibold {feedbackMessage.includes('Correct') ? 'text-green-600' : 'text-red-600'}" in:fade>
+              {feedbackMessage}
+            </div>
+          {/if}
+          <div class="flex justify-between items-center">
+            <div class="text-xl font-bold text-indigo-800 relative">
+              Score: {score}
+              {#if scoreAnimation}
+                <span 
+                  class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-2xl text-green-500 font-bold"
+                  in:fly={{ y: -20, duration: 500, easing: cubicInOut }}
+                  out:fade
+                >
+                  +1
+                </span>
+              {/if}
+            </div>
+            <button 
+              on:click={answerSubmitted ? nextQuestion : submitAnswer}
+              disabled={!selectedAnswer && !answerSubmitted}
+              class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {answerSubmitted ? 'Next Question' : 'Submit Answer'}
+            </button>
+          </div>
+        </div>
+      {:else}
+        <div class="text-center text-white text-xl bg-red-600 bg-opacity-80 p-8 rounded-lg shadow-xl">No current question available.</div>
+      {/if}
+    </div>
   </div>
 </div>
+
+<style>
+  .game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+
+  .animate-gradient-x {
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .progress-ring {
+    transition: stroke-dashoffset 0.8s ease-in-out;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+</style>

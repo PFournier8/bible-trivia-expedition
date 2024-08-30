@@ -131,7 +131,7 @@ router.get('/by-pack/:packId', authenticateToken, async (req, res) => {
     const questions = await Question.findAll({
       where: { packId: req.params.packId },
       order: sequelize.random(),
-      limit: 10 // Adjust this number as needed
+      limit: 100
     });
 
     // Format the questions based on their type
