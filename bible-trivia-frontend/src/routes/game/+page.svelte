@@ -1,25 +1,16 @@
 <script>
   import { onMount } from 'svelte';
-  // @ts-ignore
   import { fade, fly, scale } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
   import axios from 'axios';
-  // @ts-ignore
   import { goto } from '$app/navigation';
+  import { Book } from 'lucide-svelte';
 
-  /**
-	 * @type {any[]}
-	 */
   let expeditionPacks = [];
   let loading = true;
-  /**
-	 * @type {string | null}
-	 */
   let error = null;
-  /**
-	 * @type {null}
-	 */
   let hoveredPack = null;
+  let randomVerse = '';
 
   onMount(async () => {
     const token = localStorage.getItem('token');
@@ -33,8 +24,15 @@
         headers: { Authorization: `Bearer ${token}` }
       });
       expeditionPacks = response.data;
+      
+      // IMPORTANT Later, need to scrape these from somewhere IMPORTANT
+      const verses = [
+        "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life. - John 3:16",
+        "I can do all this through him who gives me strength. - Philippians 4:13",
+        "Trust in the LORD with all your heart and lean not on your own understanding. - Proverbs 3:5"
+      ];
+      randomVerse = verses[Math.floor(Math.random() * verses.length)];
     } catch (err) {
-      // @ts-ignore
       if (err.response && err.response.status === 401) {
         localStorage.removeItem('token');
         goto('/login');
@@ -46,7 +44,6 @@
     }
   });
 
-  // @ts-ignore
   function startExpedition(packId) {
     goto(`/game/${packId}`);
   }
@@ -57,13 +54,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </svelte:head>
 
-<div class="min-h-screen text-gray-800 pt-40 pb-20 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen text-gray-800 pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-blue-50 to-indigo-50">
   <div class="max-w-7xl mx-auto">
-    <div class="text-center mb-24">
+    <div class="text-center mb-16">
       <h1 class="text-5xl sm:text-6xl font-bold mb-4 font-serif text-indigo-800">
         Embark on Your Biblical Journey
       </h1>
       <p class="text-xl text-gray-600 max-w-2xl mx-auto">Explore fascinating trivia packs and test your knowledge of the scriptures</p>
+    </div>
+
+    <div class="mb-16 bg-white bg-opacity-70 backdrop-filter backdrop-blur-lg rounded-lg p-6 shadow-lg" in:fade={{ duration: 300 }}>
+      <h2 class="text-2xl font-bold mb-4 text-indigo-800 flex items-center">
+        <Book class="mr-2" /> Verse of the Day
+      </h2>
+      <p class="text-gray-600 italic">{randomVerse}</p>
     </div>
 
     {#if loading}
@@ -117,9 +121,8 @@
 <style>
   :global(body) {
     font-family: 'Poppins', sans-serif;
-    background-color: #ffffff; 
   }
-  
+
   h1 {
     font-family: 'Playfair Display', serif;
   }

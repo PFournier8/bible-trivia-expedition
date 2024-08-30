@@ -12,6 +12,7 @@ const userScoreRoutes = require('./routes/userScores');
 const powerUpRoutes = require('./routes/powerUps');
 const gameRoutes = require('./routes/game');
 const packAttemptRoutes = require('./routes/packAttempts');
+const friendRoutes = require('./routes/friends');
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +48,7 @@ app.use('/api/user-scores', userScoreRoutes);
 app.use('/api/power-ups', powerUpRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/pack-attempts', packAttemptRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
