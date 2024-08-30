@@ -31,6 +31,10 @@ fs
     db[model.name] = model;
   });
 
+const PackAttempt = require('./packAttempt');
+
+db.PackAttempt = PackAttempt(sequelize, Sequelize.DataTypes);
+
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);

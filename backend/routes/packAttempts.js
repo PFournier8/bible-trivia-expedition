@@ -36,7 +36,18 @@ router.get('/pack/:packId', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { packId, score, timeCompleted } = req.body;
-    const userId = req.user.id;
+    
+    console.log('Auth middleware user:', req.user);
+    console.log('Request body:', req.body);
+
+    // Safely access userId, providing a fallback
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User ID not found in request' });
+    }
+
+    console.log('Attempting to create/update pack attempt:', { userId, packId, score, timeCompleted });
 
     let packAttempt = await PackAttempt.findOne({ where: { userId, packId } });
 
@@ -60,8 +71,10 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    console.log('Pack attempt created/updated:', packAttempt.toJSON());
     res.status(201).json(packAttempt);
   } catch (error) {
+    console.error('Failed to create/update pack attempt:', error);
     res.status(400).json({ message: 'Failed to create/update pack attempt', error: error.message });
   }
 });

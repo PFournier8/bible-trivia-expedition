@@ -1,33 +1,52 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  // @ts-ignore
   import { browser } from '$app/environment';
+  // @ts-ignore
   import { fade, fly, scale } from 'svelte/transition';
   import { elasticOut, cubicInOut } from 'svelte/easing';
   import axios from 'axios';
+  // @ts-ignore
   import { page } from '$app/stores';
+  // @ts-ignore
   import { goto } from '$app/navigation';
 
+  // @ts-ignore
   let packId;
+  // @ts-ignore
   let questions = [];
   let currentQuestionIndex = 0;
+  // @ts-ignore
   let selectedAnswer = null;
   let score = 0;
   let loading = true;
+  // @ts-ignore
   let error = null;
   let completedPack = false;
+  // @ts-ignore
+  let startTime;
+  let endTime;
+  // @ts-ignore
+  let leaderboard = [];
+  let showLeaderboard = false;
 
-  $: currentQuestion = questions[currentQuestionIndex];
+ // @ts-ignore
+   $: currentQuestion = questions[currentQuestionIndex];
   $: accuracy = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
 
   let answerSubmitted = false;
   let feedbackMessage = '';
   let scoreAnimation = false;
+  // @ts-ignore
   let canvasElement;
+  // @ts-ignore
   let ctx;
 
+  // @ts-ignore
   let gameContainer;
 
   onMount(() => {
+    // @ts-ignore
     if (browser && gameContainer) {
       gameContainer.style.height = '100vh';
       gameContainer.style.overflow = 'hidden';
@@ -46,11 +65,14 @@
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        // @ts-ignore
         questions = response.data.map(q => ({
           ...q,
+          // @ts-ignore
           Answers: q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }))
         }));
         loading = false;
+        startTime = Date.now();
       } catch (err) {
         console.error('Error fetching questions:', err);
         error = "Failed to load questions. Please try again later.";
@@ -63,11 +85,13 @@
   });
 
   onDestroy(() => {
+    // @ts-ignore
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
     }
   });
 
+  // @ts-ignore
   function selectAnswer(answer) {
     if (!answerSubmitted) {
       selectedAnswer = answer;
@@ -75,8 +99,10 @@
   }
 
   function submitAnswer() {
+    // @ts-ignore
     if (!answerSubmitted && selectedAnswer) {
       answerSubmitted = true;
+      // @ts-ignore
       const correctAnswer = currentQuestion.Answers.find(a => a.isCorrect);
       if (selectedAnswer === correctAnswer.answerText) {
         score++;
@@ -96,9 +122,47 @@
       answerSubmitted = false;
       feedbackMessage = '';
     } else {
-      completedPack = true;
+      completePack();
     }
   }
+
+  async function completePack() {
+  completedPack = true;
+  endTime = Date.now();
+  // @ts-ignore
+  const timeTaken = Math.round((endTime - startTime) / 1000); 
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+        goto('/login');
+        return;
+      }
+
+  try {
+    // @ts-ignore
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/pack-attempts`, {
+      // @ts-ignore
+      packId,
+      score: accuracy,
+      timeCompleted: timeTaken
+    }, {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Fetch leaderboard data
+    // @ts-ignore
+    const leaderboardResponse = await axios.get(`${import.meta.env.VITE_API_URL}/pack-attempts/pack/${packId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    leaderboard = leaderboardResponse.data;
+  } catch (err) {
+    // @ts-ignore
+    console.error('Error updating pack attempt:', err.response ? err.response.data : err.message);
+  }
+}
 
   function restartPack() {
     currentQuestionIndex = 0;
@@ -107,24 +171,37 @@
     completedPack = false;
     answerSubmitted = false;
     feedbackMessage = '';
+    startTime = Date.now();
+    showLeaderboard = false;
+  }
+
+  function toggleLeaderboard() {
+    showLeaderboard = !showLeaderboard;
   }
 
   function selectAnotherPack() {
     goto('/game');
   }
 
+  // @ts-ignore
   let particles = [];
+  // @ts-ignore
   let animationFrameId;
 
   function initSmoke() {
     canvasElement = document.getElementById('smokeCanvas');
+    // @ts-ignore
     ctx = canvasElement.getContext('2d');
+    // @ts-ignore
     canvasElement.width = window.innerWidth;
+    // @ts-ignore
     canvasElement.height = window.innerHeight;
 
     for (let i = 0; i < 100; i++) {
       particles.push({
+        // @ts-ignore
         x: Math.random() * canvasElement.width,
+        // @ts-ignore
         y: Math.random() * canvasElement.height,
         radius: Math.random() * 20 + 5,
         color: `rgba(255, 255, 255, ${Math.random() * 0.3})`,
@@ -137,18 +214,26 @@
   }
 
   function animateSmoke() {
+    // @ts-ignore
     ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
+    // @ts-ignore
     particles.forEach(particle => {
+      // @ts-ignore
       ctx.beginPath();
+      // @ts-ignore
       ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+      // @ts-ignore
       ctx.fillStyle = particle.color;
+      // @ts-ignore
       ctx.fill();
 
       particle.x += particle.vx;
       particle.y += particle.vy;
 
+      // @ts-ignore
       if (particle.x < 0 || particle.x > canvasElement.width) particle.vx *= -1;
+      // @ts-ignore
       if (particle.y < 0 || particle.y > canvasElement.height) particle.vy *= -1;
     });
 
@@ -200,7 +285,7 @@
               </div>
             </div>
           </div>
-          <div class="flex justify-center space-x-4">
+          <div class="flex justify-center space-x-4 mb-8">
             <button 
               on:click={restartPack}
               class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-105 font-poppins"
@@ -214,6 +299,37 @@
               Select Another Pack
             </button>
           </div>
+          <button
+            on:click={toggleLeaderboard}
+            class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:from-yellow-500 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transform hover:scale-105 font-poppins"
+          >
+            {showLeaderboard ? 'Hide Leaderboard' : 'Show Leaderboard'}
+          </button>
+          {#if showLeaderboard}
+            <div class="mt-8 bg-white bg-opacity-90 rounded-lg p-6 shadow-lg" in:fade>
+              <h3 class="text-2xl font-bold mb-4 text-indigo-800">Leaderboard</h3>
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Rank</th>
+                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">User</th>
+                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Score</th>
+                    <th class="py-2 px-4 bg-indigo-100 font-semibold text-left">Time (s)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each leaderboard as entry, index}
+                    <tr class="border-b border-gray-200">
+                      <td class="py-2 px-4">{index + 1}</td>
+                      <td class="py-2 px-4">{entry.User.username}</td>
+                      <td class="py-2 px-4">{entry.highestScore}%</td>
+                      <td class="py-2 px-4">{entry.timeCompleted}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
         </div>
       {:else if currentQuestion}
         <div class="bg-white bg-opacity-90 rounded-lg p-8 shadow-xl" in:fade>

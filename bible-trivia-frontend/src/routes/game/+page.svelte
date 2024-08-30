@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  // @ts-ignore
   import { fade, fly, scale } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
   import axios from 'axios';
@@ -33,6 +34,7 @@
       });
       expeditionPacks = response.data;
     } catch (err) {
+      // @ts-ignore
       if (err.response && err.response.status === 401) {
         localStorage.removeItem('token');
         goto('/login');
@@ -44,6 +46,7 @@
     }
   });
 
+  // @ts-ignore
   function startExpedition(packId) {
     goto(`/game/${packId}`);
   }
