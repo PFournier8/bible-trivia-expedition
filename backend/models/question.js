@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
   Question.init({
     packId: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: 'ExpeditionPacks',
         key: 'id'
@@ -23,8 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     questionType: {
       type: DataTypes.ENUM('multiplechoice', 'truefalse'),
-      allowNull: false,
-      defaultValue: 'multiplechoice'
+      allowNull: false
     },
     correctAnswer: {
       type: DataTypes.TEXT,
@@ -32,26 +31,25 @@ module.exports = (sequelize, DataTypes) => {
     },
     wrongAnswers: {
       type: DataTypes.ARRAY(DataTypes.TEXT),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     difficulty: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
+      defaultValue: 1,
       validate: {
         min: 1,
         max: 5
       }
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
     }
   }, {
     sequelize,
     modelName: 'Question',
     tableName: 'questions',
-    timestamps: true,
-    updatedAt: false
+    timestamps: true
   });
   return Question;
 };

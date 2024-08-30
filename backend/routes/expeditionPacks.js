@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ExpeditionPack, User } = require('../models');
+const { ExpeditionPack, User, Question, sequelize } = require('../models');
 const authenticateToken = require('../middleware/auth');
 
 
@@ -32,18 +32,48 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new expedition pack (requires authentication)
+// POST route for creating an expedition pack with questions
 router.post('/', authenticateToken, async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
-    const { name, description, isOfficial } = req.body;
+    const { name, description, isOfficial, questions } = req.body;
+
+    // Validate questions
+    if (!questions || questions.length === 0) {
+      throw new Error('At least one question is required for an expedition pack.');
+    }
+
+    // Create the expedition pack
     const pack = await ExpeditionPack.create({
       name,
       description,
       creatorId: req.user.id,
       isOfficial: isOfficial || false
+    }, { transaction: t });
+
+    // Create questions
+    const createdQuestions = await Question.bulkCreate(
+      questions.map(q => ({
+        packId: pack.id,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        correctAnswer: q.correctAnswer,
+        wrongAnswers: q.wrongAnswers,
+        difficulty: q.difficulty
+      })),
+      { transaction: t, validate: true }
+    );
+
+    await t.commit();
+
+    res.status(201).json({
+      ...pack.toJSON(),
+      questions: createdQuestions
     });
-    res.status(201).json(pack);
   } catch (error) {
+    await t.rollback();
+    console.error('Error creating expedition pack:', error);
     res.status(400).json({ message: 'Failed to create expedition pack', error: error.message });
   }
 });
