@@ -2,18 +2,64 @@ const express = require('express');
 const router = express.Router();
 const { Friend, User } = require('../models');
 const authenticateToken = require('../middleware/auth');
+const Op = require('sequelize').Op;
+const cacheMiddleware = (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+};
 
-// Get all friends for the authenticated user
-router.get('/', authenticateToken, async (req, res) => {
+// Get all friends or pending requests for the authenticated user
+router.get('/', authenticateToken, cacheMiddleware, async (req, res) => {
   try {
+    const { status } = req.query;
+    const where = {
+      [Op.or]: [
+        { userId: req.user.id },
+        { friendId: req.user.id }
+      ]
+    };
+
+    if (status) {
+      where.status = status;
+    } else {
+      where.status = 'accepted';
+    }
+
     const friends = await Friend.findAll({
-      where: {
-        userId: req.user.id,
-        status: 'accepted'
-      },
-      include: [{ model: User, as: 'friendUser', attributes: ['id', 'username'] }]
+      where,
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username'],
+          where: {
+            id: { [Op.ne]: req.user.id }
+          }
+        },
+        { 
+          model: User, 
+          as: 'friendUser', 
+          attributes: ['id', 'username'],
+          where: {
+            id: { [Op.ne]: req.user.id }
+          }
+        }
+      ]
     });
-    res.json(friends);
+
+    // Transform the results to always return the friend's information
+    const transformedFriends = friends.map(friend => {
+      const friendInfo = friend.userId === req.user.id ? friend.friendUser : friend.user;
+      return {
+        id: friend.id,
+        status: friend.status,
+        createdAt: friend.createdAt,
+        updatedAt: friend.updatedAt,
+        friend: friendInfo
+      };
+    });
+
+    res.json(transformedFriends);
   } catch (error) {
     res.status(500).json({ message: 'Failed to load friends', error: error.message });
   }

@@ -3,6 +3,7 @@ const router = express.Router();
 const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -122,6 +123,29 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error', details: error.toString() });
+  }
+});
+
+// route for searching users
+router.post('/search', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || query.length < 3) {
+      return res.status(400).json({ message: 'Search query must be at least 3 characters long' });
+    }
+
+    const users = await User.findAll({
+      where: {
+        username: { [Op.iLike]: `%${query}%` }
+      },
+      attributes: ['id', 'username'],
+      limit: 10
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'An error occurred while searching for users' });
   }
 });
 
