@@ -42,10 +42,11 @@
         params: { status: 'pending' }
       });
       pendingRequests = response.data;
+      console.log('Pending requests:', pendingRequests);
     } catch (err) {
       if (err.response && err.response.status !== 304) {
         error = "Failed to load pending requests. Please try again.";
-        console.error(err);
+        console.error('Error fetching pending requests:', err);
       }
     }
   }
@@ -53,6 +54,7 @@
   async function searchUsers() {
       if (searchQuery.length < 3) {
           error = "Search query must be at least 3 characters long";
+          searchResults = [];
           return;
       }
       loading = true;
@@ -127,20 +129,25 @@
       searchResults = [];
     }
   }
+
+  $: if (searchQuery.length < 3) {
+    searchResults = [];
+  }
 </script>
   
 <svelte:head>
   <title>Friends - Bible Trivia Expedition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </svelte:head>
   
-<div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6 md:p-12 flex items-center justify-center">
-  <div class="w-full max-w-4xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
-    <div class="p-8">
-      <h1 class="text-4xl font-extrabold text-center text-white mb-8">Your Biblical Companions</h1>
+<div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-poppins">
+  <div class="max-w-4xl w-full bg-white bg-opacity-85 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
+    <div class="px-8 py-8">
+      <h1 class="text-4xl font-bold text-center text-indigo-800 mb-8">Your Biblical Companions</h1>
 
       {#if error || success}
         <div class="mb-6" transition:fade>
-          <div class="p-4 rounded-lg {error ? 'bg-red-500 bg-opacity-20 text-red-100' : 'bg-green-500 bg-opacity-20 text-green-100'}">
+          <div class="p-4 rounded-lg {error ? 'bg-red-100 border-l-4 border-red-500 text-red-700' : 'bg-green-100 border-l-4 border-green-500 text-green-700'}">
             <p class="font-medium">{error ? 'Error' : 'Success'}</p>
             <p>{error || success}</p>
           </div>
@@ -150,20 +157,20 @@
       <div class="flex justify-between items-center mb-8">
         <div class="flex space-x-4">
           <button
-            class="px-4 py-2 rounded-full text-white {activeTab === 'friends' ? 'bg-indigo-600' : 'bg-indigo-800 bg-opacity-50'} transition-colors duration-300"
+            class="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             on:click={() => activeTab = 'friends'}
           >
             Friends
           </button>
           <button
-            class="px-4 py-2 rounded-full text-white {activeTab === 'pending' ? 'bg-indigo-600' : 'bg-indigo-800 bg-opacity-50'} transition-colors duration-300"
+            class="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             on:click={() => activeTab = 'pending'}
           >
             Pending Requests
           </button>
         </div>
         <button
-          class="px-4 py-2 rounded-full bg-pink-600 text-white hover:bg-pink-700 transition-colors duration-300"
+          class="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
           on:click={toggleSearch}
         >
           {isSearchOpen ? 'Close Search' : 'Find Friends'}
@@ -176,12 +183,12 @@
             <input 
               type="text" 
               bind:value={searchQuery} 
-              placeholder="Search by username or email" 
-              class="flex-grow px-4 py-2 bg-white bg-opacity-20 border-2 border-indigo-300 border-opacity-50 rounded-full text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-300"
+              placeholder="Search by username" 
+              class="flex-grow px-4 py-3 bg-white bg-opacity-20 border-2 border-indigo-300 rounded-xl text-indigo-800 placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300"
             />
             <button 
               on:click={searchUsers}
-              class="bg-pink-600 text-white px-6 py-2 rounded-full hover:bg-pink-700 transition-colors duration-300 flex items-center justify-center"
+              class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-2 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center"
               disabled={loading}
             >
               {#if loading}
@@ -199,11 +206,10 @@
                 <div class="bg-indigo-800 bg-opacity-30 p-4 rounded-xl flex items-center justify-between" transition:fly="{{ y: 20, duration: 300, easing: cubicOut }}">
                   <div>
                     <p class="font-medium text-white">{user.username}</p>
-                    <p class="text-sm text-indigo-200">{user.email}</p>
                   </div>
                   <button 
                     on:click={() => sendFriendRequest(user.id)}
-                    class="bg-pink-600 text-white px-3 py-1 rounded-full text-sm hover:bg-pink-700 transition-colors duration-300"
+                    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1 rounded-xl text-sm hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     Add Friend
                   </button>
@@ -233,14 +239,16 @@
                   </div>
                   <button 
                     on:click={() => removeFriend(friend.id)}
-                    class="bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition-colors duration-300"
+                    class="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-xl text-sm hover:from-red-600 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   >
                     Remove
                   </button>
                 </div>
               {/each}
             {:else}
-              <p class="text-indigo-200 italic">You haven't added any friends yet. Start your biblical journey together!</p>
+              <p class="text-white text-lg font-medium bg-indigo-600 bg-opacity-50 p-6 rounded-xl text-center shadow-inner">
+                You haven't added any friends yet. Start your biblical journey together!
+              </p>
             {/if}
           </div>
         {:else}
@@ -248,30 +256,34 @@
             {#if pendingRequests.length > 0}
               {#each pendingRequests as request (request.id)}
                 <div class="bg-purple-800 bg-opacity-30 p-4 rounded-xl" transition:fly="{{ y: 20, duration: 300, easing: cubicOut }}">
-                  <div class="flex items-center space-x-4 mb-2">
-                    <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {request.username[0].toUpperCase()}
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        {request.friend.username[0].toUpperCase()}
+                      </div>
+                      <p class="font-medium text-white">{request.friend.username} wants to be your friend!</p>
                     </div>
-                    <p class="font-medium text-white">{request.username} wants to be your friend!</p>
-                  </div>
-                  <div class="flex space-x-2">
-                    <button 
-                      on:click={() => respondToRequest(request.id, 'accepted')}
-                      class="bg-green-600 text-white px-3 py-1 rounded-full text-sm hover:bg-green-700 transition-colors duration-300"
-                    >
-                      Accept
-                    </button>
-                    <button 
-                      on:click={() => respondToRequest(request.id, 'rejected')}
-                      class="bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition-colors duration-300"
-                    >
-                      Reject
-                    </button>
+                    <div class="flex space-x-2">
+                      <button 
+                        on:click={() => respondToRequest(request.id, 'accepted')}
+                        class="bg-gradient-to-r from-green-400 to-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-green-500 hover:to-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        Accept
+                      </button>
+                      <button 
+                        on:click={() => respondToRequest(request.id, 'rejected')}
+                        class="bg-gradient-to-r from-red-300 to-red-700 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-red-500 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
               {/each}
             {:else}
-              <p class="text-indigo-200 italic">No pending friend requests.</p>
+              <p class="text-white text-lg font-medium bg-indigo-600 bg-opacity-50 p-6 rounded-xl text-center shadow-inner">
+                No pending friend requests.
+              </p>
             {/if}
           </div>
         {/if}

@@ -12,7 +12,7 @@ const cacheMiddleware = (req, res, next) => {
 router.get('/', authenticateToken, cacheMiddleware, async (req, res) => {
   try {
     const { status } = req.query;
-    const where = {
+    let where = {
       [Op.or]: [
         { userId: req.user.id },
         { friendId: req.user.id }
@@ -32,17 +32,11 @@ router.get('/', authenticateToken, cacheMiddleware, async (req, res) => {
           model: User, 
           as: 'user', 
           attributes: ['id', 'username'],
-          where: {
-            id: { [Op.ne]: req.user.id }
-          }
         },
         { 
           model: User, 
           as: 'friendUser', 
           attributes: ['id', 'username'],
-          where: {
-            id: { [Op.ne]: req.user.id }
-          }
         }
       ]
     });
@@ -61,6 +55,7 @@ router.get('/', authenticateToken, cacheMiddleware, async (req, res) => {
 
     res.json(transformedFriends);
   } catch (error) {
+    console.error('Error fetching friends:', error);
     res.status(500).json({ message: 'Failed to load friends', error: error.message });
   }
 });
