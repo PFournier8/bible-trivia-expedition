@@ -4,6 +4,111 @@ const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
+const authMiddleware = require('../middleware/auth'); // Add this line
+
+// Update email
+router.put('/update-email', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const userId = req.user.id;
+
+    // Check if the new email already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
+
+    // Update the user's email
+    const user = await User.findByPk(userId);
+    if (user) {
+      await user.update({ email });
+      res.json({ message: 'Email updated successfully', user: { id: user.id, username: user.username, email: user.email } });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Update email error:', error);
+    res.status(500).json({ message: 'An error occurred while updating the email' });
+  }
+});
+
+// Update username
+router.put('/update-username', authMiddleware, async (req, res) => {
+  try {
+    const { username } = req.body;
+    const userId = req.user.id;
+
+    // Check if the new username already exists
+    const existingUser = await User.findOne({ where: { username } });
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).json({ message: 'Username already in use' });
+    }
+
+    // Update the user's username
+    const user = await User.findByPk(userId);
+    if (user) {
+      await user.update({ username });
+      res.json({ message: 'Username updated successfully', user: { id: user.id, username: user.username, email: user.email } });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Update username error:', error);
+    res.status(500).json({ message: 'An error occurred while updating the username' });
+  }
+});
+
+// Change password
+router.put('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Find the user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the current password is correct
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update the user's password
+    await user.update({ passwordHash: newPasswordHash });
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'An error occurred while changing the password' });
+  }
+});
+
+// Delete account
+router.delete('/delete-account', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find the user
+    const user = await User.findByPk(userId);
+    if (user) {
+      // Delete the user
+      await user.destroy();
+      res.json({ message: 'Account deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ message: 'An error occurred while deleting the account' });
+  }
+});
 
 // Get all users
 router.get('/', async (req, res) => {

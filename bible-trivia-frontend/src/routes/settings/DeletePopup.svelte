@@ -6,7 +6,7 @@
 </script>
 
 <h2 class="text-2xl font-semibold text-red-600 mb-4">Delete Account</h2>
-<p class="mb-4 text-gray-700">This action cannot be undone. Please type "DELETE" to confirm.</p>
+<p class="mb-4 text-gray-700">This action cannot be undone. Please type "DELETE" in all caps to confirm.</p>
 <input
   type="text"
   bind:value={confirmDelete}

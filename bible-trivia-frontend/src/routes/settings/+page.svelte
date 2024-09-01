@@ -29,15 +29,15 @@
           success = 'Email updated successfully!';
           break;
         case 'updateUsername':
-          response = await axios.put('/users/username', { username: data.username }, { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.put('/users/update-username', { username: data.username }, { headers: { Authorization: `Bearer ${token}` } });
           success = 'Username updated successfully!';
           break;
         case 'changePassword':
-          response = await axios.put('/users/password', { currentPassword: data.currentPassword, newPassword: data.newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.put('/users/change-password', { currentPassword: data.currentPassword, newPassword: data.newPassword }, { headers: { Authorization: `Bearer ${token}` } });
           success = 'Password changed successfully!';
           break;
         case 'deleteAccount':
-          response = await axios.delete('/users', { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.delete('/users/delete-account', { headers: { Authorization: `Bearer ${token}` } });
           localStorage.removeItem('token');
           window.location.href = '/login';
           break;
@@ -48,7 +48,6 @@
     }
   }
   
-  // New popup components
   import EmailPopup from './EmailPopup.svelte';
   import UsernamePopup from './UsernamePopup.svelte';
   import PasswordPopup from './PasswordPopup.svelte';
