@@ -25,11 +25,12 @@
       const response = await axios.get('/friends', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Fetched friends:', response.data);
       friends = response.data;
     } catch (err) {
+      console.error('Error fetching friends:', err);
       if (err.response && err.response.status !== 304) {
         error = "Failed to load friends. Please try again.";
-        console.error(err);
       }
     }
   }
@@ -41,12 +42,12 @@
         headers: { Authorization: `Bearer ${token}` },
         params: { status: 'pending' }
       });
+      console.log('Fetched pending requests:', response.data);
       pendingRequests = response.data;
-      console.log('Pending requests:', pendingRequests);
     } catch (err) {
+      console.error('Error fetching pending requests:', err);
       if (err.response && err.response.status !== 304) {
         error = "Failed to load pending requests. Please try again.";
-        console.error('Error fetching pending requests:', err);
       }
     }
   }
@@ -230,15 +231,15 @@
                 <div class="bg-indigo-800 bg-opacity-30 p-4 rounded-xl flex items-center justify-between" transition:fly="{{ y: 20, duration: 300, easing: cubicOut }}">
                   <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {friend.username[0].toUpperCase()}
+                      {friend.friend.username[0].toUpperCase()}
                     </div>
                     <div>
-                      <p class="font-medium text-white">{friend.username}</p>
+                      <p class="font-medium text-white">{friend.friend.username}</p>
                       <p class="text-sm text-indigo-200">Joined: {new Date(friend.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <button 
-                    on:click={() => removeFriend(friend.id)}
+                    on:click={() => removeFriend(friend.friend.id)}
                     class="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-xl text-sm hover:from-red-600 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                   >
                     Remove

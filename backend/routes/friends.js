@@ -80,7 +80,14 @@ router.put('/respond', authenticateToken, async (req, res) => {
   try {
     const { friendshipId, status } = req.body;
     const friendship = await Friend.findOne({
-      where: { id: friendshipId, friendId: req.user.id, status: 'pending' }
+      where: {
+        id: friendshipId,
+        [Op.or]: [
+          { userId: req.user.id },
+          { friendId: req.user.id }
+        ],
+        status: 'pending'
+      }
     });
     if (!friendship) {
       return res.status(404).json({ message: 'Friend request not found' });
