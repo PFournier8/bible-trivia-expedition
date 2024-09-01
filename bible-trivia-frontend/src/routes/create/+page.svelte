@@ -140,7 +140,7 @@
 <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-poppins">
   <div class="max-w-4xl w-full bg-white bg-opacity-85 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
     <div class="px-8 py-10">
-      <h2 class="text-4xl font-bold text-center text-indigo-800 mb-8">Create Your Expedition Pack</h2>
+      <h2 class="text-4xl font-bold text-center text-indigo-800 mb-8">Create Your Biblical Expedition Pack</h2>
       
       {#if error}
         <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert" transition:fade>
