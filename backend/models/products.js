@@ -9,23 +9,19 @@ module.exports = (sequelize, DataTypes) => {
   }
   Product.init({
     title: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(1000),
       allowNull: false
     },
     price: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(50),
       allowNull: false
     },
     imageUrl: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
+    productUrl: {
+      type: DataTypes.TEXT,
       allowNull: false
     }
   }, {

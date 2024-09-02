@@ -4,22 +4,34 @@ const { chromium } = require('playwright');
 const { Product } = require('../models');
 
 router.get('/scrape', async (req, res) => {
+  let browser;
   try {
-    const browser = await chromium.launch();
+    browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto('https://www.amazon.com/s?k=bible');
+    await page.goto('https://www.amazon.com/s?k=bible', { waitUntil: 'domcontentloaded' });
 
     const products = await page.evaluate(() => {
       const items = Array.from(document.querySelectorAll('.s-result-item[data-component-type="s-search-result"]'));
       return items.slice(0, 100).map(item => {
         const titleElement = item.querySelector('h2 a span');
-        const priceElement = item.querySelector('.a-price-whole');
+        const priceWhole = item.querySelector('.a-price-whole');
+        const priceFraction = item.querySelector('.a-price-fraction');
         const imageElement = item.querySelector('img.s-image');
+        const linkElement = item.querySelector('h2 a');
+
+        let price = 'N/A';
+        if (priceWhole) {
+          price = priceWhole.innerText.trim().replace('.', '');
+          if (priceFraction) {
+            price += '.' + priceFraction.innerText.trim();
+          }
+        }
 
         return {
           title: titleElement ? titleElement.innerText.trim() : 'N/A',
-          price: priceElement ? priceElement.innerText.trim() : 'N/A',
+          price: price,
           imageUrl: imageElement ? imageElement.src : 'N/A',
+          productUrl: linkElement ? 'https://www.amazon.com' + linkElement.getAttribute('href') : 'N/A',
         };
       });
     });
@@ -28,13 +40,17 @@ router.get('/scrape', async (req, res) => {
 
     // Save products to the database
     await Product.bulkCreate(products, {
-      updateOnDuplicate: ['price', 'imageUrl', 'updatedAt']
+      updateOnDuplicate: ['price', 'imageUrl', 'productUrl', 'updatedAt']
     });
 
     res.json({ message: 'Products scraped and saved successfully', count: products.length });
   } catch (error) {
     console.error('Error scraping products:', error);
     res.status(500).json({ message: 'Error fetching products', error: error.message });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
 

@@ -38,13 +38,25 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {#each products as product, index}
             <div 
-              class="bg-white rounded-lg shadow-xl overflow-hidden transform transition duration-500 hover:scale-105"
+              class="group bg-white rounded-2xl shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl flex flex-col h-full"
               in:fly={{ y: 50, delay: 50 * index, duration: 500, easing: elasticOut }}
             >
-              <img src={product.imageUrl} alt={product.title} class="w-full h-48 object-cover"/>
-              <div class="p-4">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{product.title}</h2>
-                <p class="text-2xl font-bold text-indigo-600">${product.price}</p>
+              <div class="relative h-48 bg-gradient-to-br from-indigo-100 to-purple-100">
+                <img src={product.imageUrl} alt={product.title} class="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"/>
+              </div>
+              <div class="p-5 flex flex-col flex-grow">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors duration-300 flex-grow">{product.title}</h2>
+                <div class="flex items-center justify-between mt-auto">
+                  <p class="text-2xl font-bold text-indigo-600">${product.price}</p>
+                  <a 
+                    href={product.productUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-full hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Visit Product
+                  </a>
+                </div>
               </div>
             </div>
           {/each}
@@ -54,7 +66,6 @@
   </div>
   
   <style>
-    
     .line-clamp-2 {
       display: -webkit-box;
       -webkit-line-clamp: 2;
