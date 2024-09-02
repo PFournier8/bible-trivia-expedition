@@ -56,6 +56,7 @@
           <a class="nav-link" href="/create">Create</a>
           <a class="nav-link" href="/friends">Friends</a>
           <a class="nav-link" href="/multiplayer">Multiplayer</a>
+          <a class="nav-link" href="/products">Products</a>
           <a class="nav-link" href="/settings">Settings</a>
           <button class="btn btn-transparent play-game-btn" on:click={logout}>Logout</button>
         {:else}
