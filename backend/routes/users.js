@@ -224,7 +224,15 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+    // Set token in HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
+    res.json({ user: { id: user.id, username: user.username, email: user.email } });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error', details: error.toString() });
@@ -253,5 +261,6 @@ router.post('/search', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while searching for users' });
   }
 });
+
 
 module.exports = router;

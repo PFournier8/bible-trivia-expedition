@@ -21,10 +21,7 @@
   
   async function fetchFriends() {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/friends', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get('/friends');
       console.log('Fetched friends:', response.data);
       friends = response.data;
     } catch (err) {
@@ -34,12 +31,10 @@
       }
     }
   }
-  
+
   async function fetchPendingRequests() {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get('/friends', {
-        headers: { Authorization: `Bearer ${token}` },
         params: { status: 'pending' }
       });
       console.log('Fetched pending requests:', response.data);
@@ -51,41 +46,32 @@
       }
     }
   }
-  
+
   async function searchUsers() {
-      if (searchQuery.length < 3) {
-          error = "Search query must be at least 3 characters long";
-          searchResults = [];
-          return;
-      }
-      loading = true;
-      error = '';
-      try {
-          const token = localStorage.getItem('token');
-          const response = await axios.post('/users/search', 
-              { query: searchQuery },
-          {
-              headers: { Authorization: `Bearer ${token}` }
-          }
-      );
+    if (searchQuery.length < 3) {
+      error = "Search query must be at least 3 characters long";
+      searchResults = [];
+      return;
+    }
+    loading = true;
+    error = '';
+    try {
+      const response = await axios.post('/users/search', { query: searchQuery });
       searchResults = response.data;
       if (searchResults.length === 0) {
-          error = "No users found matching your search.";
+        error = "No users found matching your search.";
       }
-      } catch (err) {
-          error = err.response?.data?.message || "Failed to search users. Please try again.";
-          console.error(err);
-      } finally {
-          loading = false;
-      }
+    } catch (err) {
+      error = err.response?.data?.message || "Failed to search users. Please try again.";
+      console.error(err);
+    } finally {
+      loading = false;
+    }
   }
-  
+
   async function sendFriendRequest(userId) {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('/friends/request', { friendId: userId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('/friends/request', { friendId: userId });
       success = "Friend request sent successfully!";
       searchResults = searchResults.filter(user => user.id !== userId);
     } catch (err) {
@@ -93,13 +79,10 @@
       console.error(err);
     }
   }
-  
+
   async function respondToRequest(requestId, status) {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put('/friends/respond', { friendshipId: requestId, status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put('/friends/respond', { friendshipId: requestId, status });
       success = `Friend request ${status === 'accepted' ? 'accepted' : 'rejected'}.`;
       await fetchFriends();
       await fetchPendingRequests();
@@ -108,13 +91,10 @@
       console.error(err);
     }
   }
-  
+
   async function removeFriend(friendId) {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/friends/${friendId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`/friends/${friendId}`);
       success = "Friend removed successfully.";
       await fetchFriends();
     } catch (err) {

@@ -11,22 +11,21 @@
   let loading = false;
 
   async function handleSubmit() {
-    loading = true;
-    error = "";
-    try {
-      const response = await axios.post('/users/login', {
-        email,
-        password,
-      });
-      localStorage.setItem("token", response.data.token);
-      goto('/game');
-    } catch (err) {
-      // @ts-ignore
-      error = err.response?.data?.message || "An error occurred. Please try again.";
-    } finally {
-      loading = false;
-    }
+  loading = true;
+  error = "";
+  try {
+    const response = await axios.post('/users/login', {
+      email,
+      password,
+    });
+    
+    goto('/game');
+  } catch (err) {
+    error = err.response?.data?.message || "An error occurred. Please try again.";
+  } finally {
+    loading = false;
   }
+}
 </script>
 
 <svelte:head>

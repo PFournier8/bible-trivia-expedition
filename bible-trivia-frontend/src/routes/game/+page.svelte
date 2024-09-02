@@ -13,16 +13,8 @@
   let randomVerse = '';
 
   onMount(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      goto('/login');
-      return;
-    }
-
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/expedition-packs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/expedition-packs`);
       expeditionPacks = response.data;
       
       // IMPORTANT Later, need to scrape these from somewhere IMPORTANT
@@ -34,7 +26,6 @@
       randomVerse = verses[Math.floor(Math.random() * verses.length)];
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        localStorage.removeItem('token');
         goto('/login');
       } else {
         error = "Failed to load expedition packs. Please try again later.";

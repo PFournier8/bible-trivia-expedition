@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+const cookieParser = require('cookie-parser');
 const { sequelize } = require('./models');
 const userRoutes = require('./routes/users');
 const expeditionPackRoutes = require('./routes/expeditionPacks');
@@ -41,6 +42,8 @@ const io = socketIo(server, {
 });
 
 app.use(express.json());
+app.use(cookieParser());
+
 
 // Routes
 app.use('/api/users', userRoutes);

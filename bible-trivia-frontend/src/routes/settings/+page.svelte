@@ -21,24 +21,22 @@
     error = '';
     success = '';
     try {
-      const token = localStorage.getItem('token');
       let response;
       switch (action) {
         case 'updateEmail':
-          response = await axios.put('/users/update-email', { email: data.email }, { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.put('/users/update-email', { email: data.email });
           success = 'Email updated successfully!';
           break;
         case 'updateUsername':
-          response = await axios.put('/users/update-username', { username: data.username }, { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.put('/users/update-username', { username: data.username });
           success = 'Username updated successfully!';
           break;
         case 'changePassword':
-          response = await axios.put('/users/change-password', { currentPassword: data.currentPassword, newPassword: data.newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+          response = await axios.put('/users/change-password', { currentPassword: data.currentPassword, newPassword: data.newPassword });
           success = 'Password changed successfully!';
           break;
         case 'deleteAccount':
-          response = await axios.delete('/users/delete-account', { headers: { Authorization: `Bearer ${token}` } });
-          localStorage.removeItem('token');
+          response = await axios.delete('/users/delete-account');
           window.location.href = '/login';
           break;
       }

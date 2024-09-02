@@ -80,48 +80,42 @@
     }
   
     async function createPack() {
-        try {
-            const token = localStorage.getItem('token');
-            
-            // Ensure we have at least one question
-            if (questions.length === 0) {
-            error = 'Please add at least one question before creating the pack.';
-            return;
-            }
-
-            const packData = {
-            name: packName,
-            description: packDescription,
-            questions: questions.map(q => ({
-                questionText: q.questionText,
-                questionType: q.questionType,
-                correctAnswer: q.correctAnswer,
-                wrongAnswers: q.questionType === 'truefalse'
-                ? [q.correctAnswer === 'true' ? 'false' : 'true']
-                : q.wrongAnswers,
-                difficulty: q.difficulty
-            }))
-            };
-
-            const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/expedition-packs`, 
-            packData,
-            {
-                headers: { Authorization: `Bearer ${token}` }
-            }
-            );
-
-            success = 'Expedition Pack created successfully!';
-            setTimeout(() => goto('/game'), 2000);
-        } catch (err) {
-            error = 'Failed to create Expedition Pack. Please try again.';
-            console.error(err);
-            if (err.response) {
-            console.error('Error response:', err.response.data);
-            error += ' ' + (err.response.data.message || err.response.data.error || '');
-            }
+      try {
+        if (questions.length === 0) {
+          error = 'Please add at least one question before creating the pack.';
+          return;
         }
+
+        const packData = {
+          name: packName,
+          description: packDescription,
+          questions: questions.map(q => ({
+            questionText: q.questionText,
+            questionType: q.questionType,
+            correctAnswer: q.correctAnswer,
+            wrongAnswers: q.questionType === 'truefalse'
+              ? [q.correctAnswer === 'true' ? 'false' : 'true']
+              : q.wrongAnswers,c
+            difficulty: q.difficulty
+          }))
+        };
+
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/expedition-packs`, 
+          packData
+        );
+
+        success = 'Expedition Pack created successfully!';
+        setTimeout(() => goto('/game'), 2000);
+      } catch (err) {
+        error = 'Failed to create Expedition Pack. Please try again.';
+        console.error(err);
+        if (err.response) {
+          console.error('Error response:', err.response.data);
+          error += ' ' + (err.response.data.message || err.response.data.error || '');
         }
+      }
+    }
 
     $: if (packName.length > MAX_NAME_LENGTH) {
       error = 'Pack name exceeds the maximum character limit.';

@@ -26,10 +26,8 @@
         email,
         password,
       });
-      localStorage.setItem("token", response.data.token);
       goto('/game');
     } catch (err) {
-      // @ts-ignore
       error = err.response?.data?.message || "An error occurred. Please try again.";
     } finally {
       loading = false;
@@ -135,6 +133,9 @@
   }
 
   .login-container:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+</style>
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   }
 </style>

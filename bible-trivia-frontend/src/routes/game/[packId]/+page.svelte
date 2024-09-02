@@ -75,33 +75,25 @@
     }
     
     const fetchQuestions = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        goto('/login');
-        return;
-      }
+    packId = $page.params.packId;
 
-      packId = $page.params.packId;
-
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        questions = response.data.map((/** @type {{ answers: any[]; }} */ q) => {
-          const answers = q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }));
-          return {
-            ...q,
-            Answers: answers.length > 2 ? shuffle([...answers]) : answers
-          };
-        });
-        loading = false;
-        startTime = Date.now();
-      } catch (err) {
-        console.error('Error fetching questions:', err);
-        error = "Failed to load questions. Please try again later.";
-        loading = false;
-      }
-    };
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/questions/by-pack/${packId}`);
+      questions = response.data.map((q) => {
+        const answers = q.answers.map(a => ({ answerText: a.text, isCorrect: a.isCorrect }));
+        return {
+          ...q,
+          Answers: answers.length > 2 ? shuffle([...answers]) : answers
+        };
+      });
+      loading = false;
+      startTime = Date.now();
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+      error = "Failed to load questions. Please try again later.";
+      loading = false;
+    }
+  };
 
     fetchQuestions();
     initSmoke();
@@ -150,42 +142,24 @@
   }
 
   async function completePack() {
-  completedPack = true;
-  endTime = Date.now();
-  // @ts-ignore
-  const timeTaken = Math.round((endTime - startTime) / 1000); 
+    completedPack = true;
+    endTime = Date.now();
+    const timeTaken = Math.round((endTime - startTime) / 1000); 
 
-  const token = localStorage.getItem('token');
-  if (!token) {
-        goto('/login');
-        return;
-      }
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/pack-attempts`, {
+        packId,
+        score: accuracy,
+        timeCompleted: timeTaken
+      });
 
-  try {
-    // @ts-ignore
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/pack-attempts`, {
-      // @ts-ignore
-      packId,
-      score: accuracy,
-      timeCompleted: timeTaken
-    }, {
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    // Fetch leaderboard data
-    // @ts-ignore
-    const leaderboardResponse = await axios.get(`${import.meta.env.VITE_API_URL}/pack-attempts/pack/${packId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    leaderboard = leaderboardResponse.data;
-  } catch (err) {
-    // @ts-ignore
-    console.error('Error updating pack attempt:', err.response ? err.response.data : err.message);
+      // Fetch leaderboard data
+      const leaderboardResponse = await axios.get(`${import.meta.env.VITE_API_URL}/pack-attempts/pack/${packId}`);
+      leaderboard = leaderboardResponse.data;
+    } catch (err) {
+      console.error('Error updating pack attempt:', err.response ? err.response.data : err.message);
+    }
   }
-}
 
   function restartPack() {
     currentQuestionIndex = 0;
